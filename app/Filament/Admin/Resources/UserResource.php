@@ -22,7 +22,7 @@ class UserResource extends Resource
 
     protected static ?string $pluralModelName = 'usuários';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
 
     public static function form(Form $form): Form
     {
@@ -55,7 +55,14 @@ class UserResource extends Resource
                     // ->dehydrated(fn ($state) => filled($state))
                     // ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                     ->visible(fn ($record) => filled($record))
-                    ->helperText('Ignore para manter a senha atual.'),
+                    ->helperText('Deixe em branco para não alterar a senha'),
+
+                Forms\Components\Select::make('roles')
+                    ->label('Funções')
+                    ->multiple()
+                    ->relationship('roles', 'name')
+                    ->preload()
+                    ->disabled(!auth()->user()->hasRole('admin'))
             ]);
     }
 
@@ -63,9 +70,21 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Nome'),
-                Tables\Columns\TextColumn::make('email')->label('Email'),
-                Tables\Columns\TextColumn::make('created_at')->label('Criado em'),
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Nome'),
+
+                Tables\Columns\TextColumn::make('email')
+                    ->label('Email'),
+
+                Tables\Columns\TextColumn::make('residences.label')
+                    ->label('Residências')
+                    ->badge()
+                    ->listWithLineBreaks()
+                    ->limitList(3)
+                    ->expandableLimitedList(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Criado em'),
             ])
             ->filters([
                 //
