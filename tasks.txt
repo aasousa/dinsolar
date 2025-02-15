@@ -1,0 +1,6 @@
+Próximas tarefas:
+-----------------
+
+[ ] - Criar wizard para gerir o processo de dimensionamento
+[ ] - Criar dashboard com gráfico do consumo x custo
+[ ] - Criar painel para registro da geração do sistema

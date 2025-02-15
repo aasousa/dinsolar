@@ -28,6 +28,7 @@ class ConsuptionResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
+            ->columns(3)
             ->schema([
                 Forms\Components\Select::make('residence_id')
                     ->label('Residência')

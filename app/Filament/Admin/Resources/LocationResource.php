@@ -26,36 +26,37 @@ class LocationResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
+            ->columns(3)
             ->schema([
                 Forms\Components\TextInput::make('labren_id')
-                    ->label('Labren ID')
+                    ->label('Id Labren')
                     ->required()
-                    ->placeholder('Labren ID'),
-
-                Forms\Components\TextInput::make('lon')
-                    ->label('Longitude')
-                    ->required()
-                    ->placeholder('Longitude'),
+                    ->placeholder('Id Labren'),
 
                 Forms\Components\TextInput::make('lat')
                     ->label('Latitude')
                     ->required()
                     ->placeholder('Latitude'),
 
-                Forms\Components\TextInput::make('name')
-                    ->label('Name')
+                Forms\Components\TextInput::make('lon')
+                    ->label('Longitude')
                     ->required()
-                    ->placeholder('Name'),
+                    ->placeholder('Longitude'),
+
+                Forms\Components\TextInput::make('name')
+                    ->label('Nome')
+                    ->required()
+                    ->placeholder('Nome'),
 
                 Forms\Components\TextInput::make('state')
-                    ->label('State')
+                    ->label('Estado')
                     ->required()
-                    ->placeholder('State'),
+                    ->placeholder('Estado'),
 
                 Forms\Components\TextInput::make('annual_irradiation')
-                    ->label('Annual Irradiation')
+                    ->label('Irradiação Anual')
                     ->required()
-                    ->placeholder('Annual Irradiation'),
+                    ->placeholder('Irradiação Anual'),
             ]);
     }
 
@@ -65,18 +66,17 @@ class LocationResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('labren_id')
                     ->searchable()
-                    ->label('Labren ID'),
-
-                Tables\Columns\TextColumn::make('lon')
-                    ->searchable()
-                    ->label('Longitude'),
+                    ->label('Id Labren'),
 
                 Tables\Columns\TextColumn::make('lat')
-                    ->searchable()
                     ->label('Latitude'),
+
+                Tables\Columns\TextColumn::make('lon')
+                    ->label('Longitude'),
 
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
+                    ->sortable()
                     ->label('Cidade'),
 
                 Tables\Columns\TextColumn::make('state')
@@ -84,12 +84,15 @@ class LocationResource extends Resource
                     ->label('Estado'),
 
                 Tables\Columns\TextColumn::make('annual_irradiation')
-                    ->searchable()
+                    ->sortable()
                     ->label('Irradiação anual'),
-
             ])
+            ->searchPlaceholder('Buscar: id, cidade ou estado')
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('state')
+                    ->label('Estado')
+                    ->multiple()
+                    ->options(Location::pluck('state', 'state')),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
