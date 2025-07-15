@@ -17,8 +17,8 @@ class Panel extends Model
         'price',
     ];
 
-    public function sizings()
+    public function selectLabel()
     {
-        return $this->hasMany(Sizing::class);
+        return "{$this->name} - {$this->power} W - R$ {$this->price}";
     }
 }

@@ -22,4 +22,24 @@ class Residence extends Model
     {
         return $this->belongsTo(Location::class);
     }
+
+    public function consuptions()
+    {
+        return $this->hasMany(Consuption::class);
+    }
+
+    public function averageKwh()
+    {
+        return $this->consuptions()->avg('kwh');
+    }
+
+    public function potenciaPico()
+    {
+        $irradiacao_solar_local = $this->location->annual_irradiation / 1000;
+        $fator_de_rendimento = 0.75;
+        $consumo_diario = $this->averageKwh() / 30;
+        $energia_ajustada = $consumo_diario / $fator_de_rendimento;
+        $potencia_de_pico = $energia_ajustada / $irradiacao_solar_local;
+        return round($potencia_de_pico, 2);
+    }
 }

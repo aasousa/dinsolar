@@ -6,8 +6,14 @@ use App\Filament\Admin\Resources\ResidenceResource\Pages;
 use App\Filament\Admin\Resources\ResidenceResource\RelationManagers;
 use App\Models\Residence;
 use App\Models\Location;
+use App\Models\Panel;
 use Filament\Forms;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -71,6 +77,70 @@ class ResidenceResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('calc')
+                    ->label('Dimensionar')
+                    ->modalHeading('Dimensionar Sistema Fotovoltaico')
+                    ->modalSubmitAction(false)
+                    ->icon('heroicon-o-calculator')
+                    ->steps([
+                        Step::make('Detalhes')
+                            ->schema([
+                                Fieldset::make('dados')
+                                    ->label('Dados da Unidade Consumidora')
+                                    ->columns(4)
+                                    ->schema([
+                                        Placeholder::make('consumo')
+                                            ->label('Consumo Médio')
+                                            ->content(fn(Residence $record): string => intval($record->averageKwh()) . " kWh/mês"),
+                                        Placeholder::make('localizacao')
+                                            ->label('Localização')
+                                            ->content(fn(Residence $record): string => $record->location->full_name),
+                                        Placeholder::make('irradiacao')
+                                            ->label('Irradiação Anual')
+                                            ->content(fn(Residence $record): string => intval($record->location->annual_irradiation) / 1000 . " Wh/m²"),
+                                        Placeholder::make('potencia')
+                                            ->label('Potência de Pico')
+                                            ->content(fn(Residence $record): string => $record->potenciaPico() . " kWp")
+                                    ])
+                            ]),
+                        Step::make('Equipamentos')
+                            ->schema([
+                                Fieldset::make('equipamentos')
+                                    ->label('Equipamentos do Sistema')
+                                    ->columns(2)
+                                    ->schema([
+                                        Select::make('panel_id')
+                                            ->label('Painel')
+                                            ->helperText('Considerando a perda de eficiência máxima de 25% em 25 anos.')
+                                            ->required()
+                                            ->options(
+                                                Panel::all()->mapWithKeys(fn($panel) => [
+                                                    $panel->id => $panel->selectLabel()
+                                                ])
+                                            )
+                                            ->native(false)
+                                            ->columnSpanFull()
+                                            ->live(),
+                                        Placeholder::make('paineis')
+                                            ->label('Quantidade necessária')
+                                            ->content(function (Residence $record, Get $get) {
+                                                $painel = Panel::find($get('panel_id'));
+                                                if ($painel) {
+                                                    $quantidade = ceil($record->potenciaPico() * 1000 * 1.25 / $painel->power);
+                                                    $preco = round($quantidade * $painel->price, 2);
+                                                    return "{$quantidade} paineis (R$ {$preco})";
+                                                }
+                                                return "Nenhum painel selecionado";
+                                            }),
+                                        Placeholder::make('inversor')
+                                            ->label('Potência do Inversor')
+                                            ->content(function (Residence $record) {
+                                                $potencia = ceil($record->potenciaPico() * 1.25);
+                                                return "Maior o igual a {$potencia} kW";
+                                            }),
+                                    ])
+                            ]),
+                    ]),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\SizingResource\Pages;
 use App\Filament\Admin\Resources\SizingResource\RelationManagers;
+use App\Models\Residence;
 use App\Models\Sizing;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -27,7 +28,20 @@ class SizingResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\Select::make('residence_id')
+                    ->label('Residência')
+                    ->required()
+                    ->relationship(
+                        'residence',
+                        'label',
+                        fn(Builder $query) =>
+                        auth()->user()->hasRole('admin')
+                            ? $query
+                            : $query->where('user_id', auth()->id())
+                    )
+                    ->getOptionLabelFromRecordUsing(fn(Residence $record) => $record->label)
+                    ->preload()
+                    ->searchable(),
             ]);
     }
 
