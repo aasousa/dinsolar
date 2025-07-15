@@ -33,6 +33,11 @@ class Residence extends Model
         return $this->consuptions()->avg('kwh');
     }
 
+    public function sizings()
+    {
+        return $this->hasMany(Sizing::class);
+    }
+
     public function potenciaPico()
     {
         $irradiacao_solar_local = $this->location->annual_irradiation / 1000;

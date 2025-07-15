@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sizings', function (Blueprint $table) {
+        Schema::create('inverters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('residence_id')->constrained();
             $table->string('name');
-            $table->integer('days');
-            $table->decimal('hours', 5, 2);
-            $table->decimal('kw', 6, 3);
-            $table->decimal('kwh', 8, 2)->nullable();
+            $table->string('description')->nullable();
+            $table->string('brand')->nullable();
+            $table->integer('power');
+            $table->integer('weight')->nullable();
+            $table->string('dimensions')->nullable();
+            $table->string('datasheet')->nullable();
+            $table->float('price', 2);
             $table->timestamps();
         });
     }
@@ -28,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sizings');
+        Schema::dropIfExists('inverters');
     }
 };

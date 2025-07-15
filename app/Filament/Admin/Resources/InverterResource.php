@@ -2,9 +2,9 @@
 
 namespace App\Filament\Admin\Resources;
 
-use App\Filament\Admin\Resources\PanelResource\Pages;
-use App\Filament\Admin\Resources\PanelResource\RelationManagers;
-use App\Models\Panel;
+use App\Filament\Admin\Resources\InverterResource\Pages;
+use App\Filament\Admin\Resources\InverterResource\RelationManagers;
+use App\Models\Inverter;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,19 +14,19 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Storage;
 
-class PanelResource extends Resource
+class InverterResource extends Resource
 {
     protected static ?string $navigationGroup = 'Admin';
 
-    protected static ?string $model = Panel::class;
+    protected static ?string $model = Inverter::class;
 
-    protected static ?string $modelLabel = 'painel';
+    protected static ?string $modelLabel = 'inversor';
 
-    protected static ?string $pluralLabel = 'paineis';
+    protected static ?string $pluralLabel = 'inversores';
 
-    protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
+    protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
 
-    protected static ?string $navigationLabel = 'Paineis';
+    // protected static ?string $navigationLabel = 'Paineis';
 
     public static function form(Form $form): Form
     {
@@ -103,12 +103,18 @@ class PanelResource extends Resource
                     ->searchable()
                     ->formatStateUsing(fn($state) => $state . ' Wp'),
 
+                Tables\Columns\TextColumn::make('price')
+                    ->label('Preço')
+                    ->formatStateUsing(fn($state) => "R$ {$state}"),
+
                 Tables\Columns\TextColumn::make('weight')
                     ->label('Peso')
                     ->formatStateUsing(fn($state) => number_format($state / 1000, 2) . ' kg'),
 
                 Tables\Columns\TextColumn::make('dimensions')
                     ->label('Dimensões')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
                     ->formatStateUsing(fn($state) => $state . ' mm'),
             ])
             ->filters([
@@ -136,7 +142,7 @@ class PanelResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManagePanels::route('/'),
+            'index' => Pages\ManageInverters::route('/'),
         ];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\ResidenceResource\Pages;
 use App\Filament\Admin\Resources\ResidenceResource\RelationManagers;
+use App\Models\Inverter;
 use App\Models\Residence;
 use App\Models\Location;
 use App\Models\Panel;
@@ -84,6 +85,7 @@ class ResidenceResource extends Resource
                     ->icon('heroicon-o-calculator')
                     ->steps([
                         Step::make('Detalhes')
+                            ->description('Informações da residência e do consumo')
                             ->schema([
                                 Fieldset::make('dados')
                                     ->label('Dados da Unidade Consumidora')
@@ -104,6 +106,7 @@ class ResidenceResource extends Resource
                                     ])
                             ]),
                         Step::make('Equipamentos')
+                            ->description('Seleção dos equipamentos e estimativa de custo')
                             ->schema([
                                 Fieldset::make('equipamentos')
                                     ->label('Equipamentos do Sistema')
@@ -111,7 +114,6 @@ class ResidenceResource extends Resource
                                     ->schema([
                                         Select::make('panel_id')
                                             ->label('Painel')
-                                            ->helperText('Considerando a perda de eficiência máxima de 25% em 25 anos.')
                                             ->required()
                                             ->options(
                                                 Panel::all()->mapWithKeys(fn($panel) => [
@@ -119,24 +121,70 @@ class ResidenceResource extends Resource
                                                 ])
                                             )
                                             ->native(false)
-                                            ->columnSpanFull()
                                             ->live(),
+
+                                        Select::make('inverter_id')
+                                            ->label('Inversor')
+                                            ->required()
+                                            ->options(function (?Residence $record) {
+                                                if (!$record || !$record->potenciaPico()) {
+                                                    return [];
+                                                }
+
+                                                $potenciaMinima = ceil($record->potenciaPico() * 1.25);
+
+                                                return Inverter::where('power', '>=', $potenciaMinima)
+                                                    ->get()
+                                                    ->mapWithKeys(fn($panel) => [
+                                                        $panel->id => $panel->selectLabel()
+                                                    ]);
+                                            })
+                                            ->native(false)
+                                            ->live(),
+
                                         Placeholder::make('paineis')
                                             ->label('Quantidade necessária')
+                                            ->hintIcon(
+                                                'heroicon-o-information-circle',
+                                                'Considerando a perda de eficiência máxima de 25% em 25 anos'
+                                            )
                                             ->content(function (Residence $record, Get $get) {
                                                 $painel = Panel::find($get('panel_id'));
-                                                if ($painel) {
-                                                    $quantidade = ceil($record->potenciaPico() * 1000 * 1.25 / $painel->power);
-                                                    $preco = round($quantidade * $painel->price, 2);
-                                                    return "{$quantidade} paineis (R$ {$preco})";
+                                                if (!$painel || !$painel->power) {
+                                                    return "Nenhum painel selecionado";
                                                 }
-                                                return "Nenhum painel selecionado";
+                                                $potenciaCorrigida = $record->potenciaPico() * 1000 * 1.25; // watts
+                                                $quantidade = ceil($potenciaCorrigida / $painel->power);
+                                                $preco = round($quantidade * $painel->price, 2);
+                                                return "{$quantidade} painéis: R$ " . number_format($preco, 2, ',', '.');
                                             }),
-                                        Placeholder::make('inversor')
-                                            ->label('Potência do Inversor')
-                                            ->content(function (Residence $record) {
-                                                $potencia = ceil($record->potenciaPico() * 1.25);
-                                                return "Maior o igual a {$potencia} kW";
+
+                                        Placeholder::make('total')
+                                            ->label('Total Estimado')
+                                            ->hintIcon(
+                                                'heroicon-o-information-circle',
+                                                'Estimativa baseada nos custos dos equipamentos principais multiplicados por um fator entre 1,35 e 1,55 para incluir estrutura, cabos, instalação e homologação'
+                                            )
+                                            ->content(function (Residence $record, Get $get) {
+                                                $painel = Panel::find($get('panel_id'));
+                                                $inversor = Inverter::find($get('inverter_id'));
+
+                                                if (!$painel || !$inversor) {
+                                                    return 'Selecione painel e inversor';
+                                                }
+
+                                                $potenciaCorrigida = $record->potenciaPico() * 1000 * 1.25;
+                                                $quantidade = ceil($potenciaCorrigida / $painel->power);
+
+                                                $subtotal = ($quantidade * $painel->price) + $inversor->price;
+
+                                                $totalMin = $subtotal * 1.35;
+                                                $totalMax = $subtotal * 1.55;
+
+                                                return 'Entre R$ ' .
+                                                    number_format($totalMin, 2, ',', '.') .
+                                                    ' e R$ ' .
+                                                    number_format($totalMax, 2, ',', '.');
                                             }),
                                     ])
                             ]),
