@@ -22,7 +22,7 @@ class ResidenceResource extends Resource
 
     protected static ?string $pluralModelName = 'residências';
 
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static ?string $navigationIcon = 'heroicon-o-home-modern';
 
     public static function form(Form $form): Form
     {
@@ -37,7 +37,7 @@ class ResidenceResource extends Resource
                     ->label('Localidade')
                     ->required()
                     ->relationship('location', 'full_name')
-                    ->getOptionLabelFromRecordUsing(fn (Location $record) => $record->full_name)
+                    ->getOptionLabelFromRecordUsing(fn(Location $record) => $record->full_name)
                     ->preload()
                     ->searchable(),
 
@@ -79,6 +79,17 @@ class ResidenceResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+
+            ->when(
+                !auth()->user()->hasRole('admin'),
+                fn(Builder $query) => $query
+                    ->where('user_id', auth()->id())
+            );
     }
 
     public static function getPages(): array

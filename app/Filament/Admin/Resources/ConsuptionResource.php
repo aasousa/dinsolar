@@ -11,6 +11,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\RawJs;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -33,8 +34,15 @@ class ConsuptionResource extends Resource
                 Forms\Components\Select::make('residence_id')
                     ->label('Residência')
                     ->required()
-                    ->relationship('residence', 'label')
-                    ->getOptionLabelFromRecordUsing(fn (Residence $record) => $record->label)
+                    ->relationship(
+                        'residence',
+                        'label',
+                        fn(Builder $query) =>
+                        auth()->user()->hasRole('admin')
+                            ? $query
+                            : $query->where('user_id', auth()->id())
+                    )
+                    ->getOptionLabelFromRecordUsing(fn(Residence $record) => $record->label)
                     ->preload()
                     ->searchable(),
 
@@ -50,7 +58,6 @@ class ConsuptionResource extends Resource
 
                 Forms\Components\TextInput::make('te')
                     ->label('Tarifa de Energia (TE)')
-                    ->required()
                     ->prefixIcon('heroicon-o-currency-dollar')
                     ->numeric()
                     ->mask('9.99999')
@@ -58,15 +65,19 @@ class ConsuptionResource extends Resource
 
                 Forms\Components\TextInput::make('tusd')
                     ->label('Tarifa de Uso do Sistema (TUSD)')
-                    ->required()
                     ->prefixIcon('heroicon-o-currency-dollar')
                     ->numeric()
                     ->mask('9.99999')
                     ->placeholder('0.00000'),
 
+                Forms\Components\TextInput::make('ammount')
+                    ->label('Valor')
+                    ->prefixIcon('heroicon-o-currency-dollar')
+                    ->numeric()
+                    ->placeholder('Total pago (incluindo impostos)'),
+
                 Forms\Components\Select::make('flag')
                     ->label('Bandeira')
-                    ->required()
                     ->options([
                         'green' => 'Verde',
                         'yellow' => 'Amarela',
@@ -74,7 +85,7 @@ class ConsuptionResource extends Resource
                         'red_2' => 'Vermelha - Patamar 2',
                     ])
                     ->prefixIcon('heroicon-s-flag')
-                    ->prefixIconColor(fn ($state) => match ($state) {
+                    ->prefixIconColor(fn($state) => match ($state) {
                         'green' => 'success',
                         'yellow' => 'warning',
                         'red_1' => 'danger',
@@ -82,13 +93,6 @@ class ConsuptionResource extends Resource
                         default => 'gray'
                     })
                     ->live(),
-
-                Forms\Components\TextInput::make('ammount')
-                    ->label('Valor')
-                    ->required()
-                    ->prefixIcon('heroicon-o-currency-dollar')
-                    ->numeric()
-                    ->placeholder('Total pago (incluindo impostos)'),
             ]);
     }
 
@@ -102,7 +106,7 @@ class ConsuptionResource extends Resource
 
                 Tables\Columns\TextColumn::make('date')
                     ->label('Mês/Ano')
-                    ->formatStateUsing(fn ($state) => date('m/Y', strtotime($state)))
+                    ->formatStateUsing(fn($state) => date('m/Y', strtotime($state)))
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('kwh')
@@ -118,7 +122,7 @@ class ConsuptionResource extends Resource
                 Tables\Columns\IconColumn::make('flag')
                     ->label('Bandeira')
                     ->icon('heroicon-s-flag')
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'green' => 'success',
                         'yellow' => 'warning',
                         'red_1' => 'danger',
@@ -131,7 +135,25 @@ class ConsuptionResource extends Resource
                     ->money('BRL'),
             ])
             ->filters([
-                //
+                SelectFilter::make('user')
+                    ->label('Usuário')
+                    ->relationship('residence.user', 'name')
+                    ->preload()
+                    ->visible(fn() => auth()->user()->hasRole('admin'))
+                    ->searchable(),
+
+                SelectFilter::make('residence')
+                    ->label('Residência')
+                    ->relationship(
+                        'residence',
+                        'label',
+                        fn(Builder $query) =>
+                        auth()->user()->hasRole('admin')
+                            ? $query
+                            : $query->where('user_id', auth()->id())
+                    )
+                    ->preload()
+                    ->searchable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -142,6 +164,21 @@ class ConsuptionResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            // ->withoutGlobalScopes([
+            //     SoftDeletingScope::class,
+            // ]);
+            // Mostra apenas os consumos das residências do usuário
+            // autenticado a menos que o usuário seja um administrador
+            ->when(
+                !auth()->user()->hasRole('admin'),
+                fn(Builder $query) => $query
+                    ->whereHas('residence', fn(Builder $q) => $q->where('user_id', auth()->id()))
+            );
     }
 
     public static function getPages(): array

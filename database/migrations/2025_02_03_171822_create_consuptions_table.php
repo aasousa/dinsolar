@@ -16,10 +16,10 @@ return new class extends Migration
             $table->foreignId('residence_id')->constrained();
             $table->date('date');
             $table->integer('kwh');
-            $table->float('te', 5);
-            $table->float('tusd', 5);
-            $table->enum('flag', ['green', 'yellow', 'red_1', 'red_2']);
-            $table->float('ammount', 2);
+            $table->float('te', 5)->nullable();
+            $table->float('tusd', 5)->nullable();
+            $table->float('ammount', 2)->nullable();
+            $table->enum('flag', ['green', 'yellow', 'red_1', 'red_2'])->nullable();
             $table->timestamps();
         });
     }

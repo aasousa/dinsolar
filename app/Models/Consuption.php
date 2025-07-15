@@ -12,8 +12,8 @@ class Consuption extends Model
         'kwh',
         'te',
         'tusd',
-        'flag',
         'ammount',
+        'flag',
     ];
 
     public function residence()

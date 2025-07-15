@@ -14,6 +14,7 @@ class Panel extends Model
         'weight',
         'dimensions',
         'datasheet',
+        'price',
     ];
 
     public function sizings()

@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class LocationResource extends Resource
 {
+    protected static ?string $navigationGroup = 'Admin';
+
     protected static ?string $model = Location::class;
 
     protected static ?string $modelLabel = 'localidade';
@@ -66,6 +68,8 @@ class LocationResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('labren_id')
                     ->searchable()
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
                     ->label('Id Labren'),
 
                 Tables\Columns\TextColumn::make('lat')

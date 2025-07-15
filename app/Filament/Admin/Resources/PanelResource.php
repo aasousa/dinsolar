@@ -16,13 +16,17 @@ use Illuminate\Support\Facades\Storage;
 
 class PanelResource extends Resource
 {
+    protected static ?string $navigationGroup = 'Admin';
+
     protected static ?string $model = Panel::class;
 
     protected static ?string $modelLabel = 'painel';
 
-    protected static ?string $pluralModelName = 'paineis';
+    protected static ?string $pluralLabel = 'paineis';
 
     protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
+
+    protected static ?string $navigationLabel = 'Paineis';
 
     public static function form(Form $form): Form
     {
@@ -69,6 +73,8 @@ class PanelResource extends Resource
 
                 Forms\Components\FileUpload::make('datasheet')
                     ->label('Datasheet')
+                    ->directory('datasheets')
+                    ->visibility('public')
                     ->acceptedFileTypes(['application/pdf'])
                     ->maxSize(2048),
 
@@ -80,34 +86,41 @@ class PanelResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->label('Nome'),
+                    ->label('Nome')
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('description')
-                    ->label('Descrição'),
+                    ->label('Descrição')
+                    ->toggleable()
+                    ->toggledHiddenByDefault(),
 
                 Tables\Columns\TextColumn::make('brand')
-                    ->label('Marca'),
+                    ->label('Marca')
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('power')
                     ->label('Potência')
-                    ->formatStateUsing(fn ($state) => $state . ' Wp'),
+                    ->searchable()
+                    ->formatStateUsing(fn($state) => $state . ' Wp'),
 
                 Tables\Columns\TextColumn::make('weight')
                     ->label('Peso')
-                    ->formatStateUsing(fn ($state) => number_format($state/1000, 2) . ' kg'),
+                    ->formatStateUsing(fn($state) => number_format($state / 1000, 2) . ' kg'),
 
                 Tables\Columns\TextColumn::make('dimensions')
                     ->label('Dimensões')
-                    ->formatStateUsing(fn ($state) => $state . ' mm'),
+                    ->formatStateUsing(fn($state) => $state . ' mm'),
             ])
             ->filters([
                 //
             ])
+            ->searchPlaceholder("Buscar por nome, marca ou potência")
             ->actions([
                 // action to open file
                 Tables\Actions\Action::make('open')
                     ->label('Datasheet')
-                    ->url(fn ($record) => Storage::url($record->datasheet))
+                    ->url(fn($record) => Storage::url($record->datasheet))
+                    ->visible(fn($record) => $record->datasheet)
                     ->openUrlInNewTab()
                     ->icon('heroicon-o-document'),
                 Tables\Actions\EditAction::make(),

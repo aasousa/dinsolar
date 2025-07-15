@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
+    protected static ?string $navigationGroup = 'Admin';
+
     protected static ?string $model = User::class;
 
     protected static ?string $modelLabel = 'usuário';
@@ -44,8 +46,8 @@ class UserResource extends Resource
                     ->password()
                     ->revealable()
                     ->minLength(8)
-                    ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                    ->visible(fn ($record) => !filled($record)),
+                    ->dehydrateStateUsing(fn($state) => Hash::make($state))
+                    ->visible(fn($record) => !filled($record)),
 
                 Forms\Components\TextInput::make('password')
                     ->label('Senha')
@@ -54,7 +56,7 @@ class UserResource extends Resource
                     ->minLength(8)
                     // ->dehydrated(fn ($state) => filled($state))
                     // ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                    ->visible(fn ($record) => filled($record))
+                    ->visible(fn($record) => filled($record))
                     ->helperText('Deixe em branco para não alterar a senha'),
 
                 Forms\Components\Select::make('roles')
