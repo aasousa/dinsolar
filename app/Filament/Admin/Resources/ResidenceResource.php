@@ -163,7 +163,7 @@ class ResidenceResource extends Resource
                                             ->label('Total Estimado')
                                             ->hintIcon(
                                                 'heroicon-o-information-circle',
-                                                'Estimativa baseada nos custos dos equipamentos principais multiplicados por um fator entre 1,35 e 1,55 para incluir estrutura, cabos, instalação e homologação'
+                                                'Estimativa baseada nos custos dos equipamentos principais multiplicados por um fator entre 1,72 e 2,38 para incluir estrutura, cabos, instalação e homologação'
                                             )
                                             ->content(function (Residence $record, Get $get) {
                                                 $painel = Panel::find($get('panel_id'));
@@ -178,8 +178,8 @@ class ResidenceResource extends Resource
 
                                                 $subtotal = ($quantidade * $painel->price) + $inversor->price;
 
-                                                $totalMin = $subtotal * 1.35;
-                                                $totalMax = $subtotal * 1.55;
+                                                $totalMin = $subtotal * 2.38;
+                                                $totalMax = $subtotal * 1.72;
 
                                                 return 'Entre R$ ' .
                                                     number_format($totalMin, 2, ',', '.') .
